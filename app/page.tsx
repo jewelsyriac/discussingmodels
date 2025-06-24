@@ -91,39 +91,32 @@ function renderWithLatex(text: string) {
     "$1"
   );
 
-  // Split into sections by bolded subheadings (e.g., **Step 1:**)
   const sectionRegex = /(\*\*[A-Za-z0-9 .#-]+:\*\*)/g;
   const parts = filtered.split(sectionRegex).filter(Boolean);
 
-  let currentSubheading: string | null = null;
+  let current: string | null = null;
   let sections: { heading: string; content: string }[] = [];
   let buffer = "";
 
   for (let part of parts) {
     if (sectionRegex.test(part)) {
-      if (currentSubheading) {
-        sections.push({
-          heading: currentSubheading,
-          content: buffer.trim(),
-        });
+      if (current) {
+        sections.push({ heading: current, content: buffer.trim() });
         buffer = "";
       }
-      currentSubheading = part;
+      current = part;
     } else {
       buffer += part;
     }
   }
-  if (currentSubheading) {
-    sections.push({
-      heading: currentSubheading,
-      content: buffer.trim(),
-    });
+  if (current) {
+    sections.push({ heading: current, content: buffer.trim() });
   }
 
   return (
     <div>
-      {sections.map((section, idx) => (
-        <div key={idx} style={{ marginBottom: 18 }}>
+      {sections.map((sec, i) => (
+        <div key={i} style={{ marginBottom: 18 }}>
           <div
             style={{
               fontWeight: 700,
@@ -139,10 +132,10 @@ function renderWithLatex(text: string) {
                 ),
               }}
             >
-              {section.heading}
+              {sec.heading}
             </ReactMarkdown>
           </div>
-          <div>{renderSectionWithLatex(section.content, idx)}</div>
+          {renderSectionWithLatex(sec.content, i)}
         </div>
       ))}
     </div>
@@ -154,20 +147,23 @@ export default function Home() {
   const [result, setResult] = useState<AskResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [showBoth, setShowBoth] = useState(false);
-  const [copied, setCopied] = useState<{ [key: string]: boolean }>({});
+  const [copied, setCopied] = useState<{ [k: string]: boolean }>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  function handleTextareaInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+  const handleTextareaInput = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setQuestion(e.target.value);
-    // Auto-resize
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height =
         textareaRef.current.scrollHeight + "px";
     }
-  }
+  };
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
     setLoading(true);
     setResult(null);
@@ -177,33 +173,29 @@ export default function Home() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question }),
     });
-    const data = await res.json();
+    const data: AskResult = await res.json();
     setResult(data);
     setLoading(false);
-  }
+  };
 
-  function handleAskAnother() {
+  const handleAskAnother = () => {
     setQuestion("");
     setResult(null);
     setShowBoth(false);
     setCopied({});
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-  }
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  };
 
-  function handleCopy(text: string, key: string) {
+  const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
-    setCopied((prev) => ({ ...prev, [key]: true }));
-    setTimeout(
-      () => setCopied((prev) => ({ ...prev, [key]: false })),
-      1200
-    );
-  }
+    setCopied((c) => ({ ...c, [key]: true }));
+    setTimeout(() => setCopied((c) => ({ ...c, [key]: false })), 1200);
+  };
 
   return (
     <main>
       <h1>STEM Question Discussion App</h1>
+
       <form onSubmit={handleSubmit}>
         <textarea
           ref={textareaRef}
@@ -225,6 +217,7 @@ export default function Home() {
         {result && (
           <button
             type="button"
+            onClick={handleAskAnother}
             style={{
               marginLeft: 12,
               background: "#f3f4f6",
@@ -232,28 +225,27 @@ export default function Home() {
               border: "1px solid #d1d5db",
               fontWeight: 500,
             }}
-            onClick={handleAskAnother}
           >
-            Ask another question
+            Ask another
           </button>
         )}
       </form>
 
-      {result && result.status === "edit" && (
+      {result?.status === "edit" && (
         <div className="edit-card">
           <strong>Question needs editing:</strong>
-          <div>
-            {result.feedback && renderWithLatex(result.feedback)}
-          </div>
+          <div>{result.feedback && renderWithLatex(result.feedback)}</div>
         </div>
       )}
 
-      {result && result.status === "answer" && (
+      {result?.status === "answer" && (
         <div className="answer-card">
           <div style={{ position: "relative" }}>
             {result.answer && renderWithLatex(result.answer)}
+
             <button
               title="Copy answer"
+              onClick={() => handleCopy(result.answer ?? "", "final")}
               style={{
                 position: "absolute",
                 top: 8,
@@ -263,127 +255,124 @@ export default function Home() {
                 borderRadius: 8,
                 cursor: "pointer",
                 padding: 6,
-                boxShadow: "0 2px 8px 0 rgba(0,0,0,0.07)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
                 zIndex: 2,
               }}
-              onClick={() => handleCopy(result.answer || "", "final")}
             >
               <CopyIcon copied={!!copied["final"]} />
             </button>
           </div>
+
           <button
-            style={{ marginTop: 16, fontSize: 14 }}
-            onClick={() => setShowBoth((v) => !v)}
             type="button"
+            onClick={() => setShowBoth((v) => !v)}
+            style={{ marginTop: 16, fontSize: 14 }}
           >
             {showBoth
               ? "Hide both model responses"
               : "Show both model responses"}
           </button>
 
-          {/* narrow result.answers before indexing */}
-          {showBoth &&
-            result.answers &&
-            result.answers.length >= 2 && (
+          {showBoth && result.answers && result.answers.length >= 2 && (
+            <div
+              className="model-compare-card"
+              style={{ display: "flex", gap: 16, marginTop: 12 }}
+            >
+              {/* Model 1 */}
               <div
-                className="model-compare-card"
-                style={{ display: "flex", gap: 16 }}
+                style={{
+                  flex: 1,
+                  background: "#e0e7ff",
+                  border: "2px solid #6366f1",
+                  borderRadius: 10,
+                  padding: 12,
+                  position: "relative",
+                }}
               >
-                {/* Model 1 */}
                 <div
                   style={{
-                    flex: 1,
-                    background: "#e0e7ff",
-                    border: "2px solid #6366f1",
-                    borderRadius: 10,
-                    padding: 12,
-                    position: "relative",
+                    fontWeight: 700,
+                    color: "#3730a3",
+                    marginBottom: 4,
                   }}
                 >
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      color: "#3730a3",
-                      marginBottom: 4,
-                    }}
-                  >
-                    Model 1:
-                  </div>
-                  {renderWithLatex(result.answers[0]?.text || "")}
-                  <button
-                    title="Copy Model 1"
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      background: "#e0e7ff",
-                      border: "1.5px solid #6366f1",
-                      borderRadius: 8,
-                      cursor: "pointer",
-                      padding: 6,
-                      boxShadow:
-                        "0 2px 8px 0 rgba(0,0,0,0.07)",
-                      zIndex: 2,
-                    }}
-                    onClick={() =>
-                      handleCopy(
-                        result.answers[0]?.text || "",
-                        "model1"
-                      )
-                    }
-                  >
-                    <CopyIcon copied={!!copied["model1"]} />
-                  </button>
+                  Model 1:
                 </div>
+                {renderWithLatex(result.answers[0].text)}
 
-                {/* Model 2 */}
-                <div
+                <button
+                  title="Copy Model 1"
+                  onClick={() =>
+                    handleCopy(
+                      result.answers?.[0]?.text ?? "",
+                      "model1"
+                    )
+                  }
                   style={{
-                    flex: 1,
-                    background: "#fef9c3",
-                    border: "2px solid #f59e42",
-                    borderRadius: 10,
-                    padding: 12,
-                    position: "relative",
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    background: "#e0e7ff",
+                    border: "1.5px solid #6366f1",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    padding: 6,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+                    zIndex: 2,
                   }}
                 >
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      color: "#b45309",
-                      marginBottom: 4,
-                    }}
-                  >
-                    Model 2:
-                  </div>
-                  {renderWithLatex(result.answers[1]?.text || "")}
-                  <button
-                    title="Copy Model 2"
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      background: "#fef9c3",
-                      border: "1.5px solid #f59e42",
-                      borderRadius: 8,
-                      cursor: "pointer",
-                      padding: 6,
-                      boxShadow:
-                        "0 2px 8px 0 rgba(0,0,0,0.07)",
-                      zIndex: 2,
-                    }}
-                    onClick={() =>
-                      handleCopy(
-                        result.answers[1]?.text || "",
-                        "model2"
-                      )
-                    }
-                  >
-                    <CopyIcon copied={!!copied["model2"]} />
-                  </button>
-                </div>
+                  <CopyIcon copied={!!copied["model1"]} />
+                </button>
               </div>
-            )}
+
+              {/* Model 2 */}
+              <div
+                style={{
+                  flex: 1,
+                  background: "#fef9c3",
+                  border: "2px solid #f59e42",
+                  borderRadius: 10,
+                  padding: 12,
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: "#b45309",
+                    marginBottom: 4,
+                  }}
+                >
+                  Model 2:
+                </div>
+                {renderWithLatex(result.answers[1].text)}
+
+                <button
+                  title="Copy Model 2"
+                  onClick={() =>
+                    handleCopy(
+                      result.answers?.[1]?.text ?? "",
+                      "model2"
+                    )
+                  }
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    background: "#fef9c3",
+                    border: "1.5px solid #f59e42",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    padding: 6,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+                    zIndex: 2,
+                  }}
+                >
+                  <CopyIcon copied={!!copied["model2"]} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </main>
