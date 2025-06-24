@@ -194,7 +194,7 @@ export default function Home() {
 
   return (
     <main>
-      <h1>STEM Question Discussion App</h1>
+      <h1>Synapse STEM Machine . . .</h1>
 
       <form onSubmit={handleSubmit}>
         <textarea
