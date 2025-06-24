@@ -203,25 +203,25 @@ export default function Home() {
             <div className="model-compare-card" style={{ display: 'flex', gap: 16 }}>
               <div style={{ flex: 1, background: '#e0e7ff', border: '2px solid #6366f1', borderRadius: 10, padding: 12, position: 'relative' }}>
                 <div style={{ fontWeight: 700, color: '#3730a3', marginBottom: 4 }}>Model 1:</div>
-                {renderWithLatex(result.answers[0].text)}
-                <button
-                  title="Copy Model 1"
+                {renderWithLatex(result.answers?.[0]?.text || "")}
+            <button
+  title="Copy Model 1"
                   style={{ position: 'absolute', top: 8, right: 8, background: '#e0e7ff', border: '1.5px solid #6366f1', borderRadius: 8, cursor: 'pointer', padding: 6, boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2 }}
-                  onClick={() => handleCopy(result.answers[0].text, 'model1')}
-                >
-                  <CopyIcon copied={!!copied['model1']} />
-                </button>
+                  onClick={() => handleCopy(result.answers?.[0]?.text || '', 'model1')}
+>
+  <CopyIcon copied={!!copied['model1']} />
+</button>
               </div>
               <div style={{ flex: 1, background: '#fef9c3', border: '2px solid #f59e42', borderRadius: 10, padding: 12, position: 'relative' }}>
                 <div style={{ fontWeight: 700, color: '#b45309', marginBottom: 4 }}>Model 2:</div>
-                {renderWithLatex(result.answers[1].text)}
-                <button
-                  title="Copy Model 2"
+                {renderWithLatex(result.answers?.[1]?.text || "")}
+<button
+  title="Copy Model 2"
                   style={{ position: 'absolute', top: 8, right: 8, background: '#fef9c3', border: '1.5px solid #f59e42', borderRadius: 8, cursor: 'pointer', padding: 6, boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2 }}
-                  onClick={() => handleCopy(result.answers[1].text, 'model2')}
-                >
-                  <CopyIcon copied={!!copied['model2']} />
-                </button>
+                  onClick={() => handleCopy(result.answers?.[1]?.text || '', 'model2')}
+>
+  <CopyIcon copied={!!copied['model2']} />
+</button>
               </div>
             </div>
           )}
