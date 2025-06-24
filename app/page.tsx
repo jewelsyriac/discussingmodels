@@ -6,9 +6,14 @@ import ReactMarkdown from "react-markdown";
 // Minimal copy icon SVG
 function CopyIcon({ copied }: { copied: boolean }) {
   return copied ? (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 10l4 4 6-6" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M5 10l4 4 6-6" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
   ) : (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="7" y="7" width="9" height="9" rx="2" stroke="#555" strokeWidth="1.5"/><rect x="4" y="4" width="9" height="9" rx="2" stroke="#555" strokeWidth="1.5"/></svg>
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="7" y="7" width="9" height="9" rx="2" stroke="#555" strokeWidth="1.5"/>
+      <rect x="4" y="4" width="9" height="9" rx="2" stroke="#555" strokeWidth="1.5"/>
+    </svg>
   );
 }
 
@@ -87,7 +92,9 @@ function renderWithLatex(text: string) {
       {sections.map((section, idx) => (
         <div key={idx} style={{ marginBottom: 18 }}>
           <div style={{ fontWeight: 700, fontSize: '1.08em', color: '#222', marginBottom: 4 }}>
-            <ReactMarkdown components={{ strong: ({node, ...props}) => <strong style={{fontWeight: 700}} {...props} /> }}>
+            <ReactMarkdown components={{
+              strong: ({node, ...props}) => <strong style={{fontWeight: 700}} {...props} />
+            }}>
               {section.heading}
             </ReactMarkdown>
           </div>
@@ -174,19 +181,26 @@ export default function Home() {
           </button>
         )}
       </form>
+
       {result && result.status === "edit" && (
         <div className="edit-card">
           <strong>Question needs editing:</strong>
           <div>{result.feedback && renderWithLatex(result.feedback)}</div>
         </div>
       )}
+
       {result && result.status === "answer" && (
         <div className="answer-card">
           <div style={{ position: 'relative' }}>
             {result.answer && renderWithLatex(result.answer)}
             <button
               title="Copy answer"
-              style={{ position: 'absolute', top: 8, right: 8, background: '#f3f4f6', border: '1.5px solid #2563eb', borderRadius: 8, cursor: 'pointer', padding: 6, boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2 }}
+              style={{
+                position: 'absolute', top: 8, right: 8,
+                background: '#f3f4f6', border: '1.5px solid #2563eb',
+                borderRadius: 8, cursor: 'pointer', padding: 6,
+                boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2
+              }}
               onClick={() => handleCopy(result.answer || '', 'final')}
             >
               <CopyIcon copied={!!copied['final']} />
@@ -194,34 +208,58 @@ export default function Home() {
           </div>
           <button
             style={{ marginTop: 16, fontSize: 14 }}
-            onClick={() => setShowBoth((v) => !v)}
+            onClick={() => setShowBoth(v => !v)}
             type="button"
           >
             {showBoth ? "Hide both model responses" : "Show both model responses"}
           </button>
+
           {showBoth && result.answers?.length >= 2 && (
             <div className="model-compare-card" style={{ display: 'flex', gap: 16 }}>
-              <div style={{ flex: 1, background: '#e0e7ff', border: '2px solid #6366f1', borderRadius: 10, padding: 12, position: 'relative' }}>
-                <div style={{ fontWeight: 700, color: '#3730a3', marginBottom: 4 }}>Model 1:</div>
+              {/* Model 1 */}
+              <div style={{
+                flex: 1, background: '#e0e7ff', border: '2px solid #6366f1',
+                borderRadius: 10, padding: 12, position: 'relative'
+              }}>
+                <div style={{ fontWeight: 700, color: '#3730a3', marginBottom: 4 }}>
+                  Model 1:
+                </div>
                 {renderWithLatex(result.answers?.[0]?.text || "")}
-            <button
-  title="Copy Model 1"
-                  style={{ position: 'absolute', top: 8, right: 8, background: '#e0e7ff', border: '1.5px solid #6366f1', borderRadius: 8, cursor: 'pointer', padding: 6, boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2 }}
+                <button
+                  title="Copy Model 1"
+                  style={{
+                    position: 'absolute', top: 8, right: 8,
+                    background: '#e0e7ff', border: '1.5px solid #6366f1',
+                    borderRadius: 8, cursor: 'pointer', padding: 6,
+                    boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2
+                  }}
                   onClick={() => handleCopy(result.answers?.[0]?.text || '', 'model1')}
->
-  <CopyIcon copied={!!copied['model1']} />
-</button>
+                >
+                  <CopyIcon copied={!!copied['model1']} />
+                </button>
               </div>
-              <div style={{ flex: 1, background: '#fef9c3', border: '2px solid #f59e42', borderRadius: 10, padding: 12, position: 'relative' }}>
-                <div style={{ fontWeight: 700, color: '#b45309', marginBottom: 4 }}>Model 2:</div>
+
+              {/* Model 2 */}
+              <div style={{
+                flex: 1, background: '#fef9c3', border: '2px solid #f59e42',
+                borderRadius: 10, padding: 12, position: 'relative'
+              }}>
+                <div style={{ fontWeight: 700, color: '#b45309', marginBottom: 4 }}>
+                  Model 2:
+                </div>
                 {renderWithLatex(result.answers?.[1]?.text || "")}
-<button
-  title="Copy Model 2"
-                  style={{ position: 'absolute', top: 8, right: 8, background: '#fef9c3', border: '1.5px solid #f59e42', borderRadius: 8, cursor: 'pointer', padding: 6, boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2 }}
+                <button
+                  title="Copy Model 2"
+                  style={{
+                    position: 'absolute', top: 8, right: 8,
+                    background: '#fef9c3', border: '1.5px solid #f59e42',
+                    borderRadius: 8, cursor: 'pointer', padding: 6,
+                    boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)', zIndex: 2
+                  }}
                   onClick={() => handleCopy(result.answers?.[1]?.text || '', 'model2')}
->
-  <CopyIcon copied={!!copied['model2']} />
-</button>
+                >
+                  <CopyIcon copied={!!copied['model2']} />
+                </button>
               </div>
             </div>
           )}
@@ -230,3 +268,4 @@ export default function Home() {
     </main>
   );
 }
+
