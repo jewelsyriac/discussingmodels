@@ -201,3 +201,34 @@ button:not(:disabled):hover {
     padding: 16px 6px;
   }
 }
+
+@media (max-width: 600px) {
+  main {
+    max-width: 98vw;
+    padding: 18px 2vw;
+  }
+  .model-compare-card {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .model-compare-card > div {
+    min-width: 0;
+    width: 100%;
+  }
+  .answer-card, .edit-card {
+    padding: 16px 6px;
+  }
+  h1 {
+    font-size: 1.3rem;
+    margin-bottom: 1.1rem;
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

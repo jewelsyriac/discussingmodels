@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '../../../lib/db';
 import Question from '../../../models/Question';
-import { geminiCall } from '../../../lib/gemini';
+import { geminiCallLite, geminiCall25, geminiCall20 } from '../../../lib/gemini';
 
 export async function POST(req) {
   await db;
@@ -20,7 +20,7 @@ After your analysis, you MUST end with one of these exact phrases:
 
 Question: ${question}`;
 
-  const checkResponse = await geminiCall(checkPrompt);
+  const checkResponse = await geminiCallLite(checkPrompt);
   
   // Check for the explicit final decision
   const hasYesDecision = checkResponse.includes("FINAL_DECISION: YES");
@@ -32,7 +32,7 @@ Question: ${question}`;
     return NextResponse.json({ status: 'edit', feedback: checkResponse });
   }
 
-  // Step 2: Dual Answering
+  // Step 2: Dual Answering (Gemini 2.5 Flash)
   const answerPrompt = `Answer this STEM question step by step in the following format:
 
 Given:
@@ -54,27 +54,27 @@ IMPORTANT: Every equation, including the final answer, MUST be wrapped in double
 
 Question: ${question}`;
 
-  const answer1 = await geminiCall(answerPrompt);
-  const answer2 = await geminiCall(answerPrompt);
+  const answer1 = await geminiCall25(answerPrompt);
+  const answer2 = await geminiCall25(answerPrompt);
 
   // Simple semantic comparison (can be improved)
   const normalize = str => str.replace(/\s+/g, '').toLowerCase();
   if (normalize(answer1) === normalize(answer2)) {
     const answersArr = [
-      { text: answer1, model: 'gemini-1' },
-      { text: answer2, model: 'gemini-2' },
+      { text: answer1, model: 'Gemini 2.5 Flash' },
+      { text: answer2, model: 'Gemini 2.5 Flash' },
     ];
     await Question.create({ question, answers: answersArr });
     return NextResponse.json({ status: 'answer', answer: answer1, answers: answersArr });
   }
 
-  // Step 3: Arbitration
+  // Step 3: Arbitration (Gemini 2.0 Flash)
   const arbPrompt = `Given the question: ${question}\nAnd two answers:\n1. ${answer1}\n2. ${answer2}\nWhich answer is more correct? Reply with '1' or '2' and explain why.`;
-  const arbResponse = await geminiCall(arbPrompt);
+  const arbResponse = await geminiCall20(arbPrompt);
   const chosen = arbResponse.includes('1') ? 1 : 2;
   const answersArr = [
-    { text: answer1, model: 'gemini-1' },
-    { text: answer2, model: 'gemini-2' },
+    { text: answer1, model: 'Gemini 2.5 Flash' },
+    { text: answer2, model: 'Gemini 2.5 Flash' },
   ];
   const finalAnswer = chosen === 1 ? answer1 : answer2;
   await Question.create({
